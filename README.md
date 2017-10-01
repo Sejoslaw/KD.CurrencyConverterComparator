@@ -1,0 +1,1 @@
+![](https://raw.githubusercontent.com/Sejoslaw/KD.CurrencyConverterComparator/master/img/Site.PNG)

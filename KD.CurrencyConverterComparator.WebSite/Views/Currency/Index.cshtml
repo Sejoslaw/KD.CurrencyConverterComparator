@@ -1,0 +1,52 @@
+﻿@model KD.CurrencyConverterComparator.Models.ModelCurrenciesDownloader
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Porównywacz Kursów Walut by Krzysztof Dobrzyński</title>
+    <link href="~/css/site.css" rel="stylesheet" />
+    <script src="~/js/site.js"></script>
+</head>
+<body>
+    @foreach (var downloader in Model.Downloaders)
+    {
+        // For each Downloader
+        <div class="">
+            <div class="table-title">
+                <h3>@downloader.Title</h3>
+            </div>
+            <table class="table table-fill">
+                <thead>
+                    <tr class="text-left">
+                        <th>Nazwa waluty</th>
+                        <th>Cena jednostki w PLN</th>
+                        <th>Pełna nazwa waluty (jeśli dostępna)</th>
+                    </tr>
+                </thead>
+                <tbody class="table-hover">
+                    @{
+                        var currencies = downloader.DownloadCurrencies();
+                    }
+                    @foreach (var currency in currencies)
+                    {
+                        <tr>
+                            <td class="text-left">
+                                @currency.ShortName
+                            </td>
+                            <td class="text-left">
+                                @currency.Value
+                            </td>
+                            <td class="text-left">
+                                @currency.FullName
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</body>
+</html>
