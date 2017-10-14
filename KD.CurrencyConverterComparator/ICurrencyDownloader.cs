@@ -20,6 +20,6 @@ namespace KD.CurrencyConverterComparator
         /// <summary>
         /// Method used to download currencies from current WebPage.
         /// </summary>
-        IEnumerable<ModelCurrency> DownloadCurrencies();
+        List<ModelCurrency> DownloadCurrencies();
     }
 }

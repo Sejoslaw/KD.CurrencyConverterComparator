@@ -1,4 +1,7 @@
-﻿@model KD.CurrencyConverterComparator.Models.ModelCurrenciesDownloader
+﻿@using KD.CurrencyConverterComparator
+@using KD.CurrencyConverterComparator.Models
+
+@model KD.CurrencyConverterComparator.Models.ModelCurrenciesDownloader
 @{
     Layout = null;
 }
@@ -11,42 +14,174 @@
     <script src="~/js/site.js"></script>
 </head>
 <body>
-    @foreach (var downloader in Model.Downloaders)
-    {
-        // For each Downloader
-        <div class="">
-            <div class="table-title">
-                <h3>@downloader.Title</h3>
-            </div>
-            <table class="table table-fill">
-                <thead>
-                    <tr class="text-left">
-                        <th>Nazwa waluty</th>
-                        <th>Cena jednostki w PLN</th>
-                        <th>Pełna nazwa waluty (jeśli dostępna)</th>
-                    </tr>
-                </thead>
-                <tbody class="table-hover">
-                    @{
-                        var currencies = downloader.DownloadCurrencies();
+    <div>
+        <div class="table-title">
+            <h3>Porównywacz Kursów Walut</h3>
+        </div>
+        <table class="table table-fill">
+            <thead>
+                <tr class="text-left">
+                    <th>Nazwa waluty</th>
+                    <th>Pełna nazwa waluty</th>
+                    @foreach (var downloader in Model.Downloaders)
+                    {
+                        // Write each available Downloader
+                        <th>Cena jednostki w PLN (@downloader.Title)</th>
                     }
-                    @foreach (var currency in currencies)
+                </tr>
+            </thead>
+            <tbody class="table-hover">
+                @{
+                    // To store downloaded Currencies
+                    var downloaded = new Dictionary<string, List<ModelCurrency>>();
+
+                    // Download Currencies
+                    foreach (var downloader in Model.Downloaders)
+                    {
+                        var afterDownload = downloader.DownloadCurrencies();
+                        var ordered = afterDownload.OrderBy(model => model.ShortName);
+                        var list = ordered.ToList();
+                        downloaded.Add(downloader.Title, list);
+                    }
+
+                    // NBP records are used as main index
+                    var nbpRecords = downloaded.ElementAt(0).Value;
+
+                    // Map to rows
+                    var rows = new List<ModelRow>();
+                    // Map records
+                    for (int i = 0; i < nbpRecords.Count(); ++i)
+                    {
+                        // Current NBP currency
+                        var currency = nbpRecords.ElementAt(i);
+
+                        // Row which will be added
+                        var row = new ModelRow();
+                        // Add values from each downloader
+                        foreach (var currencies in downloaded)
+                        {
+                            try
+                            {
+                                var value = currencies.Value.Where(model => model.ShortName.Equals(currency.ShortName)).First();
+                                row.ConnectedCurrencies.Add(value);
+                            }
+                            catch (Exception)
+                            {
+                                // If there is no value for this shortname we will set UNKNOWN
+                                var unknown = Constants.UNKNOWN;
+                                row.ConnectedCurrencies.Add(new ModelCurrency(unknown, unknown, unknown));
+                            }
+                        }
+                        // Add row
+                        rows.Add(row);
+                    }
+
+                    // Print records
+                    foreach (var currency in nbpRecords)
                     {
                         <tr>
                             <td class="text-left">
                                 @currency.ShortName
                             </td>
                             <td class="text-left">
-                                @currency.Value
-                            </td>
-                            <td class="text-left">
                                 @currency.FullName
                             </td>
+                            @{ 
+                                try
+                                {
+                                    // Mapped model for current row
+                                    var row = rows.Where(model => model.ConnectedCurrencies.ElementAt(0).ShortName.Equals(currency.ShortName)).First();
+                                    // Print values
+                                    foreach (var currentConnectedCurrency in row.ConnectedCurrencies)
+                                    {
+                                        <td>
+                                            @{
+                                                // Current value parsed
+                                                var currentConnectedCurrencyValue = (double)0;
+                                                try
+                                                {
+                                                    currentConnectedCurrencyValue = Convert.ToDouble(currentConnectedCurrency.GetDouble());
+                                                }
+                                                catch (Exception)
+                                                {
+                                                    <font color="red">
+                                                        @{ 
+                                                            <p>@string.Format(Constants.UNKNOWN)</p>
+                                                            break;
+                                                        }
+                                                    </font>
+                                                }
+
+                                                // Minimum value
+                                                var min = double.MaxValue;
+                                                try 
+                                                { 
+                                                    min = row.ConnectedCurrencies.Min(model => 
+                                                    {
+                                                        try
+                                                        {
+                                                            return Convert.ToDouble(model.GetDouble());
+                                                        }
+                                                        catch (Exception)
+                                                        {
+                                                            return currentConnectedCurrencyValue + 1;
+                                                        }
+                                                    }); 
+                                                } 
+                                                catch (Exception) 
+                                                {
+                                                }
+
+                                                // Maximum value
+                                                var max = double.MinValue;
+                                                try 
+                                                { 
+                                                    max = row.ConnectedCurrencies.Max(model => 
+                                                    {
+                                                        try
+                                                        {
+                                                            return Convert.ToDouble(model.GetDouble());
+                                                        }
+                                                        catch (Exception)
+                                                        {
+                                                            return double.MaxValue;
+                                                        }
+                                                    }); 
+                                                } 
+                                                catch (Exception) 
+                                                {
+                                                }
+
+                                                // Check for colors
+                                                if (currentConnectedCurrencyValue >= max)
+                                                {
+                                                    <font color="red">
+                                                        @currentConnectedCurrencyValue
+                                                    </font>
+                                                }
+                                                else if (currentConnectedCurrencyValue <= min)
+                                                {
+                                                    <font style="color:#00FF00">
+                                                        @currentConnectedCurrencyValue
+                                                    </font>
+                                                }
+                                                else
+                                                {
+                                                    @currentConnectedCurrencyValue
+                                                }
+                                            }
+                                        </td>
+                                    }
+                                }
+                                catch (Exception) // This should never be cought.
+                                {
+                                }
+                            }
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+                     }
+                }
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

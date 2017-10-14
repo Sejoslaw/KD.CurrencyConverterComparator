@@ -36,7 +36,7 @@ namespace KD.CurrencyConverterComparator
         {
         }
 
-        public override IEnumerable<ModelCurrency> DownloadCurrencies()
+        public override List<ModelCurrency> DownloadCurrencies()
         {
             // Get all possible currencies
             var all = this.GetParsedResponse("PLN");
@@ -50,6 +50,13 @@ namespace KD.CurrencyConverterComparator
             {
                 // Response for each Currency
                 var response = this.GetParsedResponse(currency.ShortName + Suffix);
+
+                // if something went wrong with this request
+                if (response.Equals(""))
+                {
+                    break;
+                }
+
                 var parsedToPln = this.GetAvailableCurrencies(response);
 
                 // Trick to get actual value
@@ -65,6 +72,11 @@ namespace KD.CurrencyConverterComparator
 
         private List<ModelCurrency> GetAvailableCurrencies(string all)
         {
+            if (all.Equals(""))
+            {
+                return new List<ModelCurrency>();
+            }
+
             var plnResponseJSON = JObject.Parse(all);
             var properties = plnResponseJSON.Children();
 

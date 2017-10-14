@@ -3,6 +3,7 @@ using KD.CurrencyConverterComparator.Models;
 using System.Net;
 using System.IO;
 using System.Text;
+using System;
 
 namespace KD.CurrencyConverterComparator
 {
@@ -28,19 +29,27 @@ namespace KD.CurrencyConverterComparator
             var request = WebRequest.CreateHttp(webPage);
             request.Method = "GET";
             request.ContentType = $"application/{ type }";
+            request.Timeout = int.MaxValue;
 
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            try
             {
-                using (Stream responseStream = response.GetResponseStream())
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
                 {
-                    using (StreamReader readStream = new StreamReader(responseStream, Encoding.UTF8))
+                    using (Stream responseStream = response.GetResponseStream())
                     {
-                        return readStream.ReadToEnd();
+                        using (StreamReader readStream = new StreamReader(responseStream, Encoding.UTF8))
+                        {
+                            return readStream.ReadToEnd();
+                        }
                     }
                 }
             }
+            catch (Exception)
+            {
+                return "";
+            }
         }
 
-        public abstract IEnumerable<ModelCurrency> DownloadCurrencies();
+        public abstract List<ModelCurrency> DownloadCurrencies();
     }
 }

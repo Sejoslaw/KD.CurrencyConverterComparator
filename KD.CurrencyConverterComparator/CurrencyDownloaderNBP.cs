@@ -15,7 +15,7 @@ namespace KD.CurrencyConverterComparator
         {
         }
 
-        public override IEnumerable<ModelCurrency> DownloadCurrencies()
+        public override List<ModelCurrency> DownloadCurrencies()
         {
             // Get Response from NBP and parse it to XmlReader
             var response = this.GetParsedResponse(this.WebPage, "xml");

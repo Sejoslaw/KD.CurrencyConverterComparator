@@ -1,4 +1,6 @@
-﻿namespace KD.CurrencyConverterComparator.Models
+﻿using System;
+
+namespace KD.CurrencyConverterComparator.Models
 {
     /// <summary>
     /// Describes single currency.
@@ -23,6 +25,14 @@
             this.FullName = fullName;
             this.ShortName = shortName;
             this.Value = value;
+        }
+
+        /// <summary>
+        /// Converts current Value to double.
+        /// </summary>
+        public double GetDouble()
+        {
+            return Convert.ToDouble(this.Value.Replace(".", ","));
         }
     }
 }
